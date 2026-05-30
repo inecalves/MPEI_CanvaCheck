@@ -210,3 +210,18 @@ fprintf('  Final result: %d/%d tests passed\n', passed, passed + failed);
 fprintf('══════════════════════════════════════════════════════\n');
 
 set(0, 'DefaultFigureVisible', 'on');
+
+teorica_list = (1 - pct_list/100) ./ (1 + pct_list/100);
+
+figure;
+plot(pct_list, sims,         'o-', 'LineWidth', 2, 'MarkerSize', 6, 'MarkerFaceColor', 'auto', 'DisplayName', 'obtida');
+hold on;
+plot(pct_list, teorica_list, 's--', 'LineWidth', 1.5, 'MarkerSize', 5, 'DisplayName', 'teórica');
+hold off;
+xlabel('Patches corrompidos (%)');
+ylabel('Similarity');
+title('MinHash – Similarity vs. corrupção de patches (Test 2)');
+legend('Location', 'northeast');
+xlim([-2, 102]);
+ylim([-0.05, 1.05]);
+grid on;
