@@ -23,11 +23,13 @@ nCol = floor(W / patchSize);
 nPatchPixels = nRow * nCol * patchSize^2;
 
 percentages = [0, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 25, 50, 100];
+ratios = zeros(size(percentages));
 
 fprintf('\n%-20s  %s\n', 'Pixels altered (%)', 'membership_ratio');
 fprintf('%s\n', repmat('-', 1, 42));
 
-for pct = percentages
+for i = 1:numel(percentages)
+    pct = percentages(i);
     corrupted = gray;
 
     if pct > 0
@@ -42,7 +44,19 @@ for pct = percentages
     end
 
     r = bloomFilter('test', uint8(corrupted), bfParams);
+    ratios(i) = r.membership_ratio;
     fprintf('%-20.2f  %.4f\n', pct, r.membership_ratio);
 end
 
 fprintf('\n(ratio ~1.0 = identical to reference,  ~0.0 = completely different)\n');
+
+figure;
+semilogx([0.001, percentages(2:end)], [ratios(1), ratios(2:end)], ...
+    'o-', 'LineWidth', 2, 'MarkerSize', 6, 'MarkerFaceColor', 'auto');
+xline(100, '--r', '100% altered', 'LabelVerticalAlignment', 'bottom');
+yline(0, '--k', 'LineWidth', 0.5);
+xlabel('Pixels alterados (%)');
+ylabel('membership\_ratio');
+title('Bloom Filter: membership ratio vs. corrupção da imagem');
+ylim([-0.05, 1.05]);
+grid on;
