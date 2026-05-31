@@ -46,9 +46,22 @@ function result = naiveBayes(varargin)
                 fprintf('  [%d/%d] %s  label=%d\n', i, nImages, imgPaths{i}, labels(i));
             end
 
-            nbModel = fitcnb(featureMatrix, labels(:), 'DistributionNames', 'kernel');
+            % Drop features with zero variance in any class 
+            classVals = unique(labels(:));
+            colVar = inf(1, size(featureMatrix, 2));
+            for c = 1:numel(classVals)
+                colVar = min(colVar, var(featureMatrix(labels(:) == classVals(c), :)));
+            end
+            keepCols = colVar > 0;
+            if ~all(keepCols)
+                fprintf('naiveBayes: dropping %d zero-variance feature(s): %s\n', ...
+                    sum(~keepCols), num2str(find(~keepCols)));
+            end
+
+            nbModel = fitcnb(featureMatrix(:, keepCols), labels(:), 'DistributionNames', 'normal');
 
             result.nbModel          = nbModel;
+            result.keepCols         = keepCols;
             result.minHashParams    = minHashParams;
             result.bloomFilterParams= bloomFilterParams;
             result.featureMatrix    = featureMatrix;
@@ -67,8 +80,8 @@ function result = naiveBayes(varargin)
 
             feats = extract_features(testImg, mhResult.similarity, bfResult.membership_ratio);
 
-            % Naïve Bayes prediction
-            [label, posterior] = predict(model.nbModel, feats);
+            % Naïve Bayes prediction (apply same column mask used during training)
+            [label, posterior] = predict(model.nbModel, feats(model.keepCols));
 
             result.label      = label;
             result.prob_real  = posterior(2);   
