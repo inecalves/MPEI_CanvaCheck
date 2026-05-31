@@ -79,6 +79,41 @@ else
 end
 
 %% -------------------------------------------------------------------
+% SCATTER PLOT - Espaço de features: MinHash vs Bloom Filter (split 70/30)
+% Círculos = treino  |  Quadrados = teste
+% Azul = REAL  |  Vermelho = FAKE  |  X preto = erro de classificação
+%% -------------------------------------------------------------------
+figure('Visible', 'on');
+hold on;
+
+realTrn = trnIdx(trnL == 1);
+fakeTrn = trnIdx(trnL == 0);
+scatter(featAll(realTrn, 8), featAll(realTrn, 9), 70, [0.20 0.40 0.80], 'o', 'filled', ...
+    'DisplayName', 'Treino – Real');
+scatter(featAll(fakeTrn, 8), featAll(fakeTrn, 9), 70, [0.80 0.20 0.20], 'o', 'filled', ...
+    'DisplayName', 'Treino – Fake');
+
+realTst = tstIdx(tstLv == 1);
+fakeTst = tstIdx(tstLv == 0);
+scatter(featAll(realTst, 8), featAll(realTst, 9), 90, [0.20 0.40 0.80], 's', ...
+    'LineWidth', 1.5, 'DisplayName', 'Teste – Real');
+scatter(featAll(fakeTst, 8), featAll(fakeTst, 9), 90, [0.80 0.20 0.20], 's', ...
+    'LineWidth', 1.5, 'DisplayName', 'Teste – Fake');
+
+misIdx = tstIdx(preds ~= tstLv);
+if ~isempty(misIdx)
+    scatter(featAll(misIdx, 8), featAll(misIdx, 9), 130, 'k', 'x', ...
+        'LineWidth', 2.0, 'DisplayName', 'Erro de classificação');
+end
+
+hold off;
+xlabel('MinHash Score (feature 8)');
+ylabel('Bloom Filter Ratio (feature 9)');
+title('Naive Bayes – Dispersão: MinHash vs Bloom Filter (split 70/30)');
+legend('Location', 'best');
+grid on;
+
+%% -------------------------------------------------------------------
 % TEST 2 - 10 random runs (PL_05 2g)
 % Repeats the 70/30 split ten times with different random seeds.
 % Averages Precision, Recall and F1 across runs for a more stable result.
