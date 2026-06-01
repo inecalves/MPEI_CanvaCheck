@@ -173,8 +173,8 @@ end
 fprintf('\n══ TEST 4: Dataset images  ══\n');
 
 candidates = {
-    '../data/test/The_Kiss_Tests/The_Kiss_Real.jpg',         'The_Kiss_Real (test)',    'real_test';
-    '../data/test/The_Kiss_Tests/The_Kiss_Fake1.jpg',        'The_Kiss_Fake1',           'fake';
+    '../data/test/The_Kiss_Real_Tests/The_Kiss_Real.jpg',         'The_Kiss_Real (test)',    'real_test';
+    '../data/test/The_Kiss_Real_Tests/The_Kiss_Fake1.jpg',        'The_Kiss_Fake1',           'fake';
     '../data/authentic/Starry_Night.jpg',                    'Starry_Night (authentic)', 'distinct';
     '../data/authentic/The_Girl_With_The_Pearl_Earring.jpg', 'Girl_Pearl_Earring',       'distinct';
 };
@@ -183,10 +183,12 @@ fprintf('  %-38s  %-8s  %s\n', 'image', 'similarity', 'type');
 fprintf('  %s\n', repmat('-', 1, 58));
 
 simFake = NaN;
+simVals = zeros(1, size(candidates, 1));
 for i = 1:size(candidates, 1)
-    img  = rgb2gray(imread(candidates{i,1}));
-    r    = minHash('test', img, mhParams);
-    tipo = candidates{i,3};
+    img        = rgb2gray(imread(candidates{i,1}));
+    r          = minHash('test', img, mhParams);
+    tipo       = candidates{i,3};
+    simVals(i) = r.similarity;
     fprintf('  %-38s  %-8.4f  %s\n', candidates{i,2}, r.similarity, tipo);
     if strcmp(tipo, 'fake'), simFake = r.similarity; end
 end
@@ -212,6 +214,30 @@ fprintf('═══════════════════════�
 set(0, 'DefaultFigureVisible', 'on');
 
 teorica_list = (1 - pct_list/100) ./ (1 + pct_list/100);
+
+% Bar chart – TEST 4: similarity per candidate image
+figure('Visible', 'on', 'Color', 'white');
+typeColors = containers.Map({'real_test','fake','distinct'}, ...
+    {[0.20 0.55 0.85], [0.85 0.25 0.25], [0.50 0.75 0.40]});
+nCand = size(candidates, 1);
+barHandles = gobjects(nCand, 1);
+hold on;
+for i = 1:nCand
+    barHandles(i) = bar(i, simVals(i), 0.55, 'FaceColor', typeColors(candidates{i,3}), 'EdgeColor', 'none');
+end
+yline(0.9, '--', 'Limiar real (0.9)', 'Color', [0.2 0.2 0.2], 'LineWidth', 1.2, 'LabelHorizontalAlignment', 'left');
+hold off;
+xticks(1:nCand);
+xticklabels(candidates(:,2));
+xtickangle(20);
+ylabel('MinHash Similarity');
+title('MinHash – Similaridade por imagem (Test 4)');
+ylim([0, 1.1]);
+legend([barHandles(find(strcmp(candidates(:,3),'real_test'), 1)), ...
+        barHandles(find(strcmp(candidates(:,3),'fake'),      1)), ...
+        barHandles(find(strcmp(candidates(:,3),'distinct'),  1))], ...
+       {'Real', 'Fake', 'Distinto'}, 'Location', 'northeast');
+grid on; grid minor;
 
 figure;
 plot(pct_list, sims,         'o-', 'LineWidth', 2, 'MarkerSize', 6, 'MarkerFaceColor', 'auto', 'DisplayName', 'obtida');
